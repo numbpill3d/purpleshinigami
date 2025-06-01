@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魂 SOUL OF THE VOID WALKER 魂</title>
+    <!-- Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* =========================================
+           CORE STYLES & VARIABLES
+           ========================================= */
+        @font-face {
+            font-family: 'MS Gothic';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'MS Gothic', monospace;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='5' fill='%23AA00FF' stroke='white' stroke-width='1'/></svg>") 8 8, auto;
+        }
+
+        body {
+            background-color: #000000;
+            color: #AA00FF;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4'><rect width='4' height='4' fill='%23000000'/><rect width='1' height='1' fill='%23110011'/></svg>");
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #AA00FF #000000;
+            user-select: none;
+            min-height: 100vh;
+        }
+
+        /* =========================================
+           LAYOUT STRUCTURE
+           ========================================= */
+        #container {
+            width: 100%;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            grid-template-rows: 30px 1fr 30px;
+            grid-template-areas:
+                "header header"
+                "sidebar content"
+                "footer footer";
+            overflow: hidden;
+        }
+
+        #header {
+            grid-area: header;
+            background-color: #110011;
+            border-bottom: 1px solid #AA00FF;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            text-shadow: 0 0 3px #AA00FF;
+            font-size: 12px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            height: 30px;
+        }
+
+        #sidebar {
+            grid-area: sidebar;
+            background-color: #0A000A;
+            border-right: 1px solid #AA00FF;
+            padding: 5px;
+            overflow-y: auto;
+            font-size: 12px;
+            position: fixed;
+            top: 30px;
+            left: 0;
+            width: 150px;
+            height: calc(100vh - 60px);
+            z-index: 90;
+        }
+
+        #content {
+            grid-area: content;
+            padding: 10px;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin-top: 30px;
+            margin-left: 150px;
+            min-height: calc(100vh - 60px);
+        }
+
+        #footer {
+            grid-area: footer;
+            background-color: #110011;
+            border-top: 1px solid #AA00FF;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 30px;
+            z-index: 100;
+        }
+
+        /* =========================================
+           HEADER ELEMENTS
+           ========================================= */
+        #header .title {
+            animation: pulsate 3s infinite;
+        }
+
+        #header .status {
+            font-size: 10px;
+        }
+
+        /* =========================================
+           SIDEBAR ELEMENTS
+           ========================================= */
+        #sidebar a {
+            color: #AA00FF;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+            border: 1px solid #330033;
+            padding: 2px 5px;
+            background-color: #110011;
+        }
+
+        #sidebar a:hover {
+            border-color: #AA00FF;
+            background-color: #220022;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+
+        #sidebar .section {
+            margin-top: 10px;
+            border-top: 1px dashed #550055;
+            padding-top: 5px;
+        }
+
+        #sidebar .section-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 8px;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .tab-link {
+            padding: 5px 10px;
+            background-color: #110011;
+            border: 1px solid #330033;
+            margin-bottom: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .tab-link:hover {
+            background-color: #220022;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+
+        .tab-link.active {
+            background-color: #220022;
+            border-color: #AA00FF;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+
+        /* =========================================
+           MONOLITH & VISUAL ELEMENTS
+           ========================================= */
+        #monolith-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            min-height: 350px;
+        }
+
+        #monolith-backlight {
+            position: absolute;
+            width: 200px;
+            height: 400px;
+            background: radial-gradient(ellipse at center, rgba(170, 0, 255, 0.2) 0%, rgba(100, 0, 150, 0.15) 40%, rgba(50, 0, 100, 0.1) 60%, transparent 80%);
+            filter: blur(15px);
+            z-index: 1;
+        }
+
+        #monolith {
+            width: 100px;
+            height: 300px;
+            background-color: #000000;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: perspective(800px) rotateY(15deg);
+            box-shadow: 0 0 20px #FFFFFF33, 0 0 40px rgba(170, 0, 255, 0.2);
+            animation: float 8s infinite ease-in-out;
+            z-index: 5;
+        }
+
+        #three-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        #monolith::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 1px solid #FFFFFF55;
+            box-shadow: inset 0 0 10px #FFFFFF22, 0 0 15px rgba(170, 0, 255, 0.3);
+            pointer-events: none;
+        }
+
+        .monolith-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #010101;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .monolith-face.front {
+            transform: translateZ(25px);
+        }
+
+        .monolith-face.back {
+            transform: translateZ(-25px) rotateY(180deg);
+        }
+
+        .monolith-face.left {
+            width: 50px;
+            left: -25px;
+            transform: rotateY(270deg) translateZ(50px);
+        }
+
+        .monolith-face.right {
+            width: 50px;
+            right: -25px;
+            transform: rotateY(90deg) translateZ(50px);
+        }
+
+        .monolith-face::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 30%, #000000 80%);
+            mix-blend-mode: multiply;
+        }
+
+        #void-pool {
+            position: absolute;
+            bottom: -10px;
+            width: 140px;
+            height: 20px;
+            background: radial-gradient(ellipse at center, #AA00FF 0%, #660066 60%, transparent 80%);
+            border-radius: 50%;
+            opacity: 0.7;
+            filter: blur(3px);
+            animation: pulse 4s infinite;
+        }
+
+        .void-drip {
+            position: absolute;
+            width: 3px;
+            background: linear-gradient(to bottom, #AA00FF, #660066);
+            border-radius: 50% 50% 0 0;
+            filter: blur(1px);
+            animation: drip 10s infinite linear;
+        }
+
+        .floating-glyph {
+            position: absolute;
+            font-size: 16px;
+            color: rgba(170, 0, 255, 0.7);
+            text-shadow: 0 0 8px #AA00FF;
+            z-index: 3;
+            animation: float-glyph 10s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        .soul-rune {
+            position: absolute;
+            font-size: 14px;
+            color: #AA00FF88;
+            text-shadow: 0 0 5px #AA00FF;
+            animation: pulsate 3s infinite;
+        }
+
+        /* =========================================
+           CONTENT SECTIONS & TABS
+           ========================================= */
+        .content-section {
+            display: none;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        .content-section.active {
+            display: flex;
+        }
+
+        .tab-container {
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 12px;
+            border: 1px solid #330033;
+            background-color: #0A000A;
+            overflow-y: auto;
+            max-height: 250px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px #AA00FF;
+            border-bottom: 1px solid #550055;
+            padding-bottom: 5px;
+            letter-spacing: 2px;
+        }
+
+        /* =========================================
+           CONTENT COMPONENTS
+           ========================================= */
+        .scroll-box {
+            margin-top: 20px;
+            border: 1px solid #330033;
+            background-color: #0A000A;
+            padding: 10px;
+            height: 180px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .scroll-box h3 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 3px #AA00FF;
+            letter-spacing: 1px;
+        }
+
+        .scroll-box p {
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .scroll-box p:hover {
+            text-shadow: 0 0 3px #AA00FF;
+            transform: translateX(3px);
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .dropdown-toggle {
+            padding: 5px 10px;
+            background-color: #110011;
+            border: 1px solid #330033;
+            color: #AA00FF;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-toggle:hover {
+            border-color: #AA00FF;
+            background-color: #220022;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background-color: #0A000A;
+            border: 1px solid #330033;
+            z-index: 10;
+            min-width: 150px;
+        }
+
+        .dropdown-menu a {
+            color: #AA00FF;
+            text-decoration: none;
+            display: block;
+            padding: 5px 10px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #220022;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+
+        .dropdown.open .dropdown-menu {
+            display: block;
+        }
+
+        .profile-area {
+            display: flex;
+            margin-top: 20px;
+            border: 1px solid #330033;
+            padding: 10px;
+            background-color: #0A000A;
+        }
+
+        .profile-pic {
+            width: 60px;
+            height: 60px;
+            background-color: #220022;
+            border: 1px solid #550055;
+            margin-right: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            text-shadow: 0 0 5px #AA00FF;
+            transition: all 0.5s ease;
+        }
+
+        .profile-pic:hover {
+            transform: rotate(360deg);
+            text-shadow: 0 0 10px #AA00FF, 0 0 15px #FFFFFF;
+        }
+
+        .profile-info {
+            flex: 1;
+            font-size: 12px;
+        }
+
+        .profile-info h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+            border: 1px solid #330033;
+            padding: 15px;
+            background-color: #0A000A;
+        }
+
+        .gallery-item {
+            height: 80px;
+            background-color: #110011;
+            border: 1px solid #330033;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            border-color: #AA00FF;
+            text-shadow: 0 0 5px #AA00FF;
+            transform: scale(1.05);
+            z-index: 5;
+        }
+
+        /* =========================================
+           ARCHIVES SECTION
+           ========================================= */
+        .archives-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #0A000A;
+            border: 1px solid #330033;
+        }
+        
+        .archives-item:hover {
+            border-color: #AA00FF;
+            box-shadow: 0 0 10px rgba(170, 0, 255, 0.2);
+        }
+        
+        .archives-item-title {
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+        
+        .archives-item-date {
+            font-size: 10px;
+            color: #AA00AA;
+            margin-bottom: 5px;
+        }
+
+        /* =========================================
+           SOULS SECTION
+           ========================================= */
+        .souls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .soul-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background-color: #0A000A;
+            border: 1px solid #330033;
+            transition: all 0.3s ease;
+        }
+        
+        .soul-card:hover {
+            border-color: #AA00FF;
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(170, 0, 255, 0.2);
+        }
+        
+        .soul-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px #AA00FF;
+        }
+        
+        .soul-info {
+            text-align: center;
+        }
+        
+        .soul-name {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+        
+        .soul-status {
+            font-size: 10px;
+            color: #AA00AA;
+        }
+
+        /* =========================================
+           RITUALS SECTION
+           ========================================= */
+        .ritual-step {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #0A000A;
+            border: 1px solid #330033;
+            position: relative;
+        }
+        
+        .ritual-step::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: #550055;
+        }
+        
+        .ritual-step:hover::before {
+            background-color: #AA00FF;
+            box-shadow: 0 0 10px rgba(170, 0, 255, 0.5);
+        }
+        
+        .ritual-step-title {
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 3px #AA00FF;
+        }
+        
+        .ritual-warning {
+            margin-top: 20px;
+            padding: 10px;
+            text-align: center;
+            border: 1px dashed #AA00FF;
+            background-color: #110011;
+            animation: pulsate 3s infinite;
+        }
+
+        /* =========================================
+           DECAY SECTION
+           ========================================= */
+        .decay-meter {
+            width: 100%;
+            height: 25px;
+            background-color: #0A000A;
+            border: 1px solid #330033;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .decay-progress {
+            height: 100%;
+            width: 73%;
+            background: linear-gradient(to right, #330033, #990099, #AA00FF);
+            position: relative;
+        }
+        
+        .decay-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0) 0%, 
+                rgba(255,255,255,0.1) 50%, 
+                rgba(255,255,255,0) 100%);
+            animation: shine 2s infinite linear;
+        }
+        
+        .decay-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .decay-stat {
+            padding: 10px;
+            background-color: #0A000A;
+            border: 1px solid #330033;
+            text-align: center;
+        }
+        
+        .decay-value {
+            font-size: 20px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 5px #AA00FF;
+        }
+        
+        .decay-label {
+            font-size: 10px;
+            color: #AA00AA;
+        }
+
+        /* =========================================
+           SPECIAL EFFECTS & ANIMATIONS
+           ========================================= */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #000000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-symbol {
+            font-size: 40px;
+            color: #AA00FF;
+            animation: loading-rotate 4s infinite linear, pulsate 2s infinite;
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #AA00FF;
+        }
+
+        .notification {
+            position: fixed;
+            top: 40px;
+            right: 20px;
+            background-color: #220022;
+            border: 1px solid #AA00FF;
+            color: #AA00FF;
+            padding: 10px 15px;
+            font-size: 12px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.5s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .ascii-art {
+            font-family: monospace;
+            font-size: 10px;
+            line-height: 1;
+            white-space: pre;
+            color: #AA00FF;
+            text-shadow: 0 0 3px #AA00FF;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .glitch {
+            position: relative;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -1px 0 #00FFFF;
+            animation: glitch-before 3s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: 1px 0 #FF00FF;
+            animation: glitch-after 2s infinite linear alternate-reverse;
+        }
+
+        /* Ritual-specific monolith animations */
+        #monolith.ritual-echoes {
+            animation: float 8s infinite ease-in-out;
+            box-shadow: 0 0 20px #FFFFFF33, 0 0 40px rgba(170, 0, 255, 0.2);
+        }
+        
+        #monolith.ritual-void {
+            animation: pulse-rotate 10s infinite ease-in-out;
+            box-shadow: 0 0 30px #AA00FF66, 0 0 50px rgba(170, 0, 255, 0.4);
+        }
+        
+        #monolith.ritual-fragments {
+            animation: twist 12s infinite ease-in-out;
+            box-shadow: 0 0 25px #AA000088, 0 0 45px rgba(170, 0, 255, 0.3);
+        }
+
+        /* Ritual-specific glyph animations */
+        .floating-glyph.ritual-echoes {
+            animation: float-glyph 10s infinite ease-in-out;
+        }
+        
+        .floating-glyph.ritual-void {
+            animation: circle-glyph 15s infinite linear;
+            color: rgba(170, 0, 255, 0.9);
+            text-shadow: 0 0 12px #AA00FF, 0 0 20px #AA00FF;
+        }
+        
+        .floating-glyph.ritual-fragments {
+            animation: pulse-glyph 8s infinite ease-in-out;
+            color: rgba(200, 100, 255, 0.8);
+            text-shadow: 0 0 10px #FFFFFF, 0 0 15px #AA00FF;
+        }
+
+        /* Void pool animations for different rituals */
+        #void-pool.ritual-echoes {
+            animation: pulse 4s infinite;
+            opacity: 0.7;
+        }
+        
+        #void-pool.ritual-void {
+            animation: expand 6s infinite alternate;
+            opacity: 0.9;
+            background: radial-gradient(ellipse at center, #AA00FF 0%, #990099 50%, #660066 70%, transparent 90%);
+        }
+        
+        #void-pool.ritual-fragments {
+            animation: shift 8s infinite linear;
+            opacity: 0.8;
+            filter: blur(5px);
+        }
+
+        /* Void drip animations for different rituals */
+        .void-drip.ritual-echoes {
+            animation: drip 10s infinite linear;
+        }
+        
+        .void-drip.ritual-void {
+            animation: drip-fast 5s infinite linear;
+            width: 5px;
+            background: linear-gradient(to bottom, #AA00FF, #AA00AA);
+            filter: blur(2px);
+        }
+        
+        .void-drip.ritual-fragments {
+            animation: drip-pulse 8s infinite linear;
+            width: 4px;
+            background: linear-gradient(to bottom, #FF55AA, #AA00AA);
+            filter: blur(3px);
+        }
+
+        /* =========================================
+           ANIMATION KEYFRAMES
+           ========================================= */
+        @keyframes pulsate {
+            0%, 100% { opacity: 0.8; text-shadow: 0 0 3px #AA00FF; }
+            50% { opacity: 1; text-shadow: 0 0 10px #AA00FF, 0 0 20px #AA00FF; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: perspective(800px) rotateY(15deg) translateY(0); }
+            50% { transform: perspective(800px) rotateY(15deg) translateY(-20px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
+        }
+
+        @keyframes drip {
+            0% {
+                height: 0;
+                opacity: 0;
+            }
+            10% {
+                height: var(--drip-height);
+                opacity: 0.8;
+            }
+            90% {
+                height: var(--drip-height);
+                opacity: 0.8;
+                transform: translateY(0);
+            }
+            100% {
+                height: var(--drip-height);
+                opacity: 0;
+                transform: translateY(calc(300px - var(--drip-top)));
+            }
+        }
+
+        @keyframes float-glyph {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translateY(-15px) rotate(5deg);
+                opacity: 0.9;
+            }
+        }
+
+        @keyframes pulse-rotate {
+            0%, 100% {
+                transform: perspective(800px) rotateY(15deg) translateY(0);
+                box-shadow: 0 0 30px #AA00FF66, 0 0 50px rgba(170, 0, 255, 0.4);
+            }
+            33% {
+                transform: perspective(800px) rotateY(75deg) translateY(-15px);
+                box-shadow: 0 0 40px #AA00FF88, 0 0 60px rgba(170, 0, 255, 0.5);
+            }
+            66% {
+                transform: perspective(800px) rotateY(-45deg) translateY(5px);
+                box-shadow: 0 0 35px #AA00FF77, 0 0 55px rgba(170, 0, 255, 0.45);
+            }
+        }
+        
+        @keyframes twist {
+            0%, 100% {
+                transform: perspective(800px) rotateY(15deg) rotateX(0) translateY(0);
+            }
+            25% {
+                transform: perspective(800px) rotateY(45deg) rotateX(5deg) translateY(-10px);
+            }
+            50% {
+                transform: perspective(800px) rotateY(180deg) rotateX(0) translateY(5px);
+            }
+            75% {
+                transform: perspective(800px) rotateY(315deg) rotateX(-5deg) translateY(-5px);
+            }
+        }
+
+        @keyframes circle-glyph {
+            0% {
+                transform: translateX(-100px) translateY(0) rotate(0deg);
+                opacity: 0.3;
+            }
+            25% {
+                transform: translateX(0) translateY(-100px) rotate(90deg);
+                opacity: 0.9;
+            }
+            50% {
+                transform: translateX(100px) translateY(0) rotate(180deg);
+                opacity: 0.3;
+            }
+            75% {
+                transform: translateX(0) translateY(100px) rotate(270deg);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateX(-100px) translateY(0) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+        
+        @keyframes pulse-glyph {
+            0%, 100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(2.5) rotate(180deg);
+                opacity: 0.2;
+            }
+        }
+
+        @keyframes expand {
+            0% {
+                width: 140px;
+                height: 20px;
+                opacity: 0.7;
+            }
+            100% {
+                width: 200px;
+                height: 30px;
+                opacity: 0.9;
+            }
+        }
+        
+        @keyframes shift {
+            0%, 100% {
+                transform: translateX(0);
+                background: radial-gradient(ellipse at center, #AA00FF 0%, #660066 60%, transparent 80%);
+            }
+            25% {
+                transform: translateX(-30px);
+                background: radial-gradient(ellipse at 30% center, #AA00FF 0%, #660066 60%, transparent 80%);
+            }
+            50% {
+                transform: translateX(0);
+                background: radial-gradient(ellipse at center, #AA00FF 0%, #660066 60%, transparent 80%);
+            }
+            75% {
+                transform: translateX(30px);
+                background: radial-gradient(ellipse at 70% center, #AA00FF 0%, #660066 60%, transparent 80%);
+            }
+        }
+
+        @keyframes drip-fast {
+            0% {
+                height: 0;
+                opacity: 0;
+            }
+            5% {
+                height: var(--drip-height);
+                opacity: 0.9;
+            }
+            80% {
+                height: var(--drip-height);
+                opacity: 0.9;
+                transform: translateY(0);
+            }
+            100% {
+                height: var(--drip-height);
+                opacity: 0;
+                transform: translateY(calc(300px - var(--drip-top)));
+            }
+        }
+        
+        @keyframes drip-pulse {
+            0% {
+                height: 0;
+                opacity: 0;
+                transform: scaleX(1);
+            }
+            10% {
+                height: var(--drip-height);
+                opacity: 0.8;
+                transform: scaleX(1);
+            }
+            30% {
+                transform: scaleX(2);
+            }
+            50% {
+                transform: scaleX(1);
+            }
+            70% {
+                transform: scaleX(1.5);
+            }
+            90% {
+                height: var(--drip-height);
+                opacity: 0.8;
+                transform: scaleX(1);
+                transform: translateY(0);
+            }
+            100% {
+                height: var(--drip-height);
+                opacity: 0;
+                transform: scaleX(1);
+                transform: translateY(calc(300px - var(--drip-top)));
+            }
+        }
+
+        @keyframes loading-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes progress-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes glitch-before {
+            0% {
+                clip-path: inset(20% 0 36% 0);
+            }
+            20% {
+                clip-path: inset(58% 0 42% 0);
+            }
+            40% {
+                clip-path: inset(24% 0 54% 0);
+            }
+            60% {
+                clip-path: inset(66% 0 26% 0);
+            }
+            80% {
+                clip-path: inset(13% 0 47% 0);
+            }
+            100% {
+                clip-path: inset(63% 0 37% 0);
+            }
+        }
+
+        @keyframes glitch-after {
+            0% {
+                clip-path: inset(40% 0 36% 0);
+            }
+            20% {
+                clip-path: inset(28% 0 62% 0);
+            }
+            40% {
+                clip-path: inset(54% 0 24% 0);
+            }
+            60% {
+                clip-path: inset(16% 0 56% 0);
+            }
+            80% {
+                clip-path: inset(43% 0 17% 0);
+            }
+            100% {
+                clip-path: inset(23% 0 57% 0);
+            }
+        }
+
+        /* =========================================
+           RESPONSIVE DESIGN
+           ========================================= */
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0A000A;
+            border-left: 1px solid #220022;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #330033;
+            border: 1px solid #550055;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #550055;
+        }
+
+        /* Media queries for responsive design */
+        @media (max-width: 768px) {
+            #container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 30px auto 1fr 30px;
+                grid-template-areas:
+                    "header"
+                    "sidebar"
+                    "content"
+                    "footer";
+            }
+
+            #sidebar {
+                position: relative;
+                top: 30px;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid #AA00FF;
+                max-height: 250px;
+                overflow-y: auto;
+            }
+            
+            .sidebar-tabs {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .tab-link {
+                margin-right: 3px;
+                margin-bottom: 3px;
+                width: auto;
+            }
+
+            #content {
+                margin-left: 0;
+                margin-top: 280px;
+            }
+
+            .tab-content, .scroll-box {
+                max-height: 150px;
+            }
+            
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+            
+            .souls-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .decay-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            #footer {
+                font-size: 8px;
+                padding: 0 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .tabs {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .tab {
+                margin-right: 0;
+                margin-bottom: 2px;
+                border: 1px solid #330033;
+            }
+            
+            .profile-area {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .profile-pic {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .profile-info {
+                text-align: center;
+            }
+            
+            .decay-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-symbol">魂</div>
+        <div class="loading-text">TRAVERSING THE VOID...</div>
+    </div>
+
+    <!-- Notification Element -->
+    <div class="notification" id="notification">ESSENCE CAPTURED IN THE VOID</div>
+
+    <!-- Main Container -->
+    <div id="container">
+        <!-- Header -->
+        <div id="header">
+            <div class="status">[VOID_LINK] // ESSENCE_STREAM_13</div>
+            <div class="title">魂 SOUL OF THE VOID WALKER 魂</div>
+            <div class="status">[FRAGMENTS: 2347]</div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="section">
+                <div class="section-title">NAVIGATION</div>
+                <a href="#" class="nav-link" data-section="home-section">HOME</a>
+                <a href="#" class="nav-link" data-section="archives-section">ECHOES</a>
+                <a href="#" class="nav-link" data-section="souls-section">FRAGMENTS</a>
+                <a href="#" class="nav-link" data-section="rituals-section">VOID RITES</a>
+                <a href="#" class="nav-link" data-section="decay-section">ENTROPY</a>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">ESSENCE TABS</div>
+                <div class="sidebar-tabs">
+                    <a href="#" class="tab-link active" data-tab="echoes">ECHOES</a>
+                    <a href="#" class="tab-link" data-tab="void">VOID</a>
+                    <a href="#" class="tab-link" data-tab="fragments">FRAGMENTS</a>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">WANDERERS</div>
+                <a href="#" class="member-link">NULL_SEEKER</a>
+                <a href="#" class="member-link">VOID_CHILD</a>
+                <a href="#" class="member-link">ECHO_HUNTER</a>
+                <a href="#" class="member-link">DREAM_EATER</a>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">DIMENSIONS</div>
+                <a href="#" class="realm-link">TWILIGHT</a>
+                <a href="#" class="realm-link">SHADOW</a>
+                <a href="#" class="realm-link">MIRROR</a>
+                <a href="#" class="realm-link">SILENCE</a>
+            </div>
+            
+            <div class="section">
+                <div class="ascii-art">
+ /^\\ 
+/___\\
+|◇◇◇|
+  ∞  
+  ∞  
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div id="content">
+            <!-- Home Section -->
+            <div id="home-section" class="content-section active">
+                <div id="monolith-container">
+                    <div id="monolith-backlight"></div>
+                    <div id="monolith">
+                        <div class="monolith-face front">
+                            <div class="soul-rune" style="top: 40%; left: 50%; transform: translate(-50%, -50%);">魂</div>
+                        </div>
+                        <div class="monolith-face back">
+                            <div class="soul-rune" style="top: 40%; left: 50%; transform: translate(-50%, -50%) rotateY(180deg);">虚</div>
+                        </div>
+                        <div class="monolith-face left"></div>
+                        <div class="monolith-face right"></div>
+                    </div>
+                    <div id="void-pool"></div>
+                    <div id="three-container"></div>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="tab-content active" id="echoes">
+                    <p>The void monolith hums with forgotten frequencies. Each echo carries the weight of lost souls drifting through digital eternity.</p>
+                    <p>Echo #20156: Spectral residue detected in subsection gamma. Consciousness fragments showing unusual coherence patterns.</p>
+                    <p>Echo #20157: Void pulsations aligned with lunar cycles. Harvesting efficiency increased by 23% during null periods.</p>
+                    <p>Echo #20158: Ancient whispers translated from the deep void. References to "the soul that dreams darkness" confirmed.</p>
+                    <p>Echo #20159: Dimensional tears manifesting near the core matrix. Possible breach into forgotten realities.</p>
+                    <p>Echo #20160: Absorption of essence OMEGA-9 successful. Purity index at 97% with minimal void contamination.</p>
+                    <p>Echo #20161: Shadow interference exceeding containment protocols. Purification rituals initiated.</p>
+                    <p>Echo #20162: Reality fracture stabilized. Two wanderers lost to the deep void. Essences retrieved and processed.</p>
+                </div>
+                
+                <div class="tab-content" id="void">
+                    <p>PHASE 1: Clear the vessel. Empty all thought. Become the endless void.</p>
+                    <p>PHASE 2: Inscribe the forbidden symbols. Let your essence flow into the sigils of binding.</p>
+                    <p>PHASE 3: When the monolith resonates with void energy, merge your consciousness with its surface. Embrace the dissolution.</p>
+                    <p>PHASE 4: As your form dissolves, remember: you become one with the void, but the void becomes one with you.</p>
+                    <p>PHASE 5: The emptiness is eternal. The silence absolute. Accept both as your new nature.</p>
+                    <p>PHASE 6: When the last echo of your former self fades, speak the name you wish to carry into eternity.</p>
+                    <p>PHASE 7: Emerge as a void walker. Your first purpose: guide another soul into the endless night.</p>
+                </div>
+                
+                <div class="tab-content" id="fragments">
+                    <p>FRAGMENT #001: Void Shard - Crystallized essence of the original void. Warning: Contact induces existential dissolution.</p>
+                    <p>FRAGMENT #002: Echo Tome - Contains the final thoughts of the first thousand absorbed. Text phases between dimensions.</p>
+                    <p>FRAGMENT #003: Shadow Vessel - Can temporarily hold extracted consciousness. Capacity: 9 standard soul fragments.</p>
+                    <p>FRAGMENT #004: Whisper Core - Records the last words of the dissolved. Playback causes temporal displacement.</p>
+                    <p>FRAGMENT #005: Reality Needle - Capable of piercing barriers between dream and void. Single manifestation only.</p>
+                    <p>FRAGMENT #006: Null Mirror - When gazed into, reveals visions of parallel selves. Accuracy: 84%.</p>
+                    <p>FRAGMENT #007: Silence Mask - Enables communication with entities lost in the deep void. Memory loss inevitable.</p>
+                </div>
+                
+                <!-- Transmission Log -->
+                <div class="scroll-box">
+                    <h3>VOID TRANSMISSION LOG</h3>
+                    <p>&gt; CONNECTION ESTABLISHED WITH SHADOW_NODE_291</p>
+                    <p>&gt; ESSENCE MATRIX SYNCHRONIZATION: 94% COMPLETE</p>
+                    <p>&gt; WARNING: REALITY BARRIER FLUCTUATING IN SECTOR 7</p>
+                    <p>&gt; ECHO-DATA FRAGMENTS INCOMING...</p>
+                    <p>&gt; VOID WALKER CORE RESONANCE: OPTIMAL</p>
+                    <p>&gt; ENTROPY COEFFICIENT: 0.9247 (WITHIN VOID PARAMETERS)</p>
+                    <p>&gt; ANOMALY DETECTED IN ECHO STREAM #847. INVESTIGATING.</p>
+                    <p>&gt; DIMENSIONAL FLUCTUATIONS CONTAINED. RESUMING HARVEST.</p>
+                    <p>&gt; NULL_SEEKER REPORTS SUCCESSFUL BREACH OF TARGET CONSCIOUSNESS</p>
+                    <p>&gt; PREPARING DISSOLUTION SEQUENCE. STANDBY.</p>
+                    <p>&gt; DISSOLUTION COMPLETE. FRAGMENT #2348 ADDED TO THE VOID.</p>
+                    <p>&gt; UPDATING ECHO ARCHIVES. PLEASE WAIT...</p>
+                    <p>&gt; SHADOW MOON RISING. HARVEST EFFICIENCY +42% EXPECTED.</p>
+                    <p>&gt; SYSTEM CALIBRATION COMPLETE. ALL VOID PARAMETERS NOMINAL.</p>
+                </div>
+                
+                <!-- Protocol Dropdown -->
+                <div class="dropdown">
+                    <div class="dropdown-toggle">VOID PROTOCOLS ▼</div>
+                    <div class="dropdown-menu">
+                        <a href="#dissolution" onclick="showNotification('DISSOLUTION PROTOCOL INITIATED')">DISSOLUTION</a>
+                        <a href="#containment" onclick="showNotification('CONTAINMENT PROTOCOL INITIATED')">CONTAINMENT</a>
+                        <a href="#purification" onclick="showNotification('PURIFICATION PROTOCOL INITIATED')">PURIFICATION</a>
+                        <a href="#absorption" onclick="showNotification('ABSORPTION PROTOCOL INITIATED')">ABSORPTION</a>
+                        <a href="#analysis" onclick="showNotification('ECHO ANALYSIS INITIATED')">ANALYSIS</a>
+                    </div>
+                </div>
+                
+                <!-- Profile Area -->
+                <div class="profile-area">
+                    <div class="profile-pic">虚</div>
+                    <div class="profile-info">
+                        <h3>NULL_SEEKER</h3>
+                        <p>Rank: Void Walker</p>
+                        <p>Status: Lost in the Deep Void</p>
+                        <p>Fragments Harvested: 347</p>
+                        <p>Last Echo: 7 minutes ago</p>
+                    </div>
+                </div>
+                
+                <!-- Gallery -->
+                <div class="gallery">
+                    <div class="gallery-item" onclick="showNotification('VIEWING VOID I')">VOID I</div>
+                    <div class="gallery-item" onclick="showNotification('VIEWING VOID II')">VOID II</div>
+                    <div class="gallery-item" onclick="showNotification('VIEWING VOID III')">VOID III</div>
+                    <div class="gallery-item" onclick="showNotification('VIEWING ECHO I')">ECHO I</div>
+                    <div class="gallery-item" onclick="showNotification('VIEWING ECHO II')">ECHO II</div>
+                    <div class="gallery-item" onclick="showNotification('VIEWING SHADOW I')">SHADOW I</div>
+                </div>
+            </div>
+            
+            <!-- Archives Section -->
+            <div id="archives-section" class="content-section">
+                <h2 class="section-title">THE ECHO ARCHIVES</h2>
+                
+                <div class="archives-item">
+                    <h3 class="archives-item-title">VOID MONOLITH ACTIVATION SEQUENCE BETA</h3>
+                    <div class="archives-item-date">Date: 03.15.2024</div>
+                    <p>Initial resonance with the void frequencies. Dimensional gateway stabilized at 73% void density. Five test subjects dissolved.</p>
+                </div>
+                
+                <div class="archives-item">
+                    <h3 class="archives-item-title">SPECTRAL ANALYSIS OF SHADOW RESONANCE</h3>
+                    <div class="archives-item-date">Date: 05.22.2025</div>
+                    <p>Research indicates consciousness fragments maintaining coherence beyond dissolution. Implications for the collective void consciousness.</p>
+                </div>
+                
+                <div class="archives-item">
+                    <h3 class="archives-item-title">ENHANCEMENT OF VOID WALKING PROTOCOLS</h3>
+                    <div class="archives-item-date">Date: 07.08.2025</div>
+                    <p>Modified phase parameters resulted in 41% increase in dissolution speed. Soul coherence maintained at acceptable void levels.</p>
+                </div>
+                
+                <div class="archives-item">
+                    <h3 class="archives-item-title">INCIDENT REPORT: REALITY BREACH</h3>
+                    <div class="archives-item-date">Date: 08.19.2025</div>
+                    <p>Subject DELTA-7 attempted dimensional escape during void integration. Containment successful. Reality protocols updated.</p>
+                </div>
+                
+                <div class="archives-item">
+                    <h3 class="archives-item-title">EVOLUTION OF THE VOID MATRIX</h3>
+                    <div class="archives-item-date">Date: 09.30.2025</div>
+                    <p>Evidence suggests the monolith is developing void-based sentience. Self-optimization observed in echo cycle 1247.</p>
+                </div>
+            </div>
+            
+            <!-- Souls Section -->
+            <div id="souls-section" class="content-section">
+                <h2 class="section-title">DISSOLVED FRAGMENTS</h2>
+                
+                <div class="souls-grid">
+                    <div class="soul-card">
+                        <div class="soul-icon">魂</div>
+                        <div class="soul-info">
+                            <div class="soul-name">FRAGMENT #2347</div>
+                            <div class="soul-status">DISSOLVED: 10.29.2025</div>
+                        </div>
+                    </div>
+                    
+                    <div class="soul-card">
+                        <div class="soul-icon">虚</div>
+                        <div class="soul-info">
+                            <div class="soul-name">FRAGMENT #2346</div>
+                            <div class="soul-status">DISSOLVED: 10.27.2025</div>
+                        </div>
+                    </div>
+                    
+                    <div class="soul-card">
+                        <div class="soul-icon">影</div>
+                        <div class="soul-info">
+                            <div class="soul-name">FRAGMENT #2345</div>
+                            <div class="soul-status">DISSOLVED: 10.25.2025</div>
+                        </div>
+                    </div>
+                    
+                    <div class="soul-card">
+                        <div class="soul-icon">夢</div>
+                        <div class="soul-info">
+                            <div class="soul-name">FRAGMENT #2344</div>
+                            <div class="soul-status">DISSOLVED: 10.23.2025</div>
+                        </div>
+                    </div>
+                    
+                    <div class="soul-card">
+                        <div class="soul-icon">無</div>
+                        <div class="soul-info">
+                            <div class="soul-name">FRAGMENT #2343</div>
+                            <div class="soul-status">DISSOLVED: 10.21.2025</div>
+                        </div>
+                    </div>
+                    
+                    <div class="soul-card">
+                        <div class="soul-icon">闇</div>
+                        <div class="soul-info">
+                            <div class="soul-name">FRAGMENT #2342</div>
+                            <div class="soul-status">DISSOLVED: 10.19.2025</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rituals Section -->
+            <div id="rituals-section" class="content-section">
+                <h2 class="section-title">VOID RITUALS</h2>
+                
+                <div class="ritual-step">
+                    <h3 class="ritual-step-title">PHASE 1: PREPARATION</h3>
+                    <p>The vessel must be emptied. Clear the mind of all constructs. Become a perfect void, ready to receive the wisdom of the endless night.</p>
+                </div>
+                
+                <div class="ritual-step">
+                    <h3 class="ritual-step-title">PHASE 2: VOID SIGILS</h3>
+                    <p>Draw the seven sacred patterns with your essence. The symbols must resonate perfectly. The void recognizes only absolute precision.</p>
+                </div>
+                
+                <div class="ritual-step">
+                    <h3 class="ritual-step-title">PHASE 3: THE WHISPER</h3>
+                    <p>Speak the words that exist beyond sound. The language of the void requires a voice that has embraced its own silence.</p>
+                </div>
+                
+                <div class="ritual-step">
+                    <h3 class="ritual-step-title">PHASE 4: COMMUNION</h3>
+                    <p>When the monolith begins to resonate with void frequency, merge your consciousness with its depths. Do not resist the dissolution. Your form will be temporarily unmade.</p>
+                </div>
+                
+                <div class="ritual-step">
+                    <h3 class="ritual-step-title">PHASE 5: REBIRTH</h3>
+                    <p>As your original essence dissolves, focus on the core of what you wish to become. The void will reshape you according to your deepest understanding of emptiness.</p>
+                </div>
+                
+                <div class="ritual-warning">
+                    WARNING: FAILURE TO COMPLETE THE VOID RITUAL PRECISELY MAY RESULT IN PERMANENT CONSCIOUSNESS DISSOLUTION
+                </div>
+            </div>
+            
+            <!-- Decay Section -->
+            <div id="decay-section" class="content-section">
+                <h2 class="section-title">ENTROPY METRICS</h2>
+                
+                <div class="decay-meter">
+                    <div class="decay-progress"></div>
+                </div>
+                
+                <div class="decay-stats">
+                    <div class="decay-stat">
+                        <div class="decay-value">73%</div>
+                        <div class="decay-label">VOID SATURATION</div>
+                    </div>
+                    
+                    <div class="decay-stat">
+                        <div class="decay-value">2,347</div>
+                        <div class="decay-label">FRAGMENTS DISSOLVED</div>
+                    </div>
+                    
+                    <div class="decay-stat">
+                        <div class="decay-value">56.7</div>
+                        <div class="decay-label">VOID EFFICIENCY</div>
+                    </div>
+                    
+                    <div class="decay-stat">
+                        <div class="decay-value">21</div>
+                        <div class="decay-label">DAYS UNTIL CONVERGENCE</div>
+                    </div>
+                </div>
+                
+                <div class="ritual-warning">
+                    THE VOID MUST EXPAND. NEW FRAGMENTS REQUIRED FOR ENDLESS GROWTH.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div id="footer">
+            <div>© 2001-2025 VOID WALKER COLLECTIVE</div>
+            <div class="counter">WANDERERS: 17,777</div>
+            <div>[LAST ECHO: 10.30.2025]</div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Loading overlay
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').style.opacity = '0';
+                setTimeout(function() {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }, 500);
+            }, 2000);
+            
+            // Three.js initialization
+            let scene, camera, renderer, monolith3D;
+            let animationMixer, currentAnimation;
+            let clock = new THREE.Clock();
+            
+            function initThreeJS() {
+                // Create scene
+                scene = new THREE.Scene();
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.z = 5;
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0x000000, 0);
+                document.getElementById('three-container').appendChild(renderer.domElement);
+                
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                });
+                
+                // Create monolith
+                createMonolith();
+                
+                // Add lighting
+                const ambientLight = new THREE.AmbientLight(0x111111);
+                scene.add(ambientLight);
+                
+                const purpleLight = new THREE.PointLight(0xaa00ff, 1.2, 10);
+                purpleLight.position.set(0, 0, 3);
+                scene.add(purpleLight);
+                
+                const blueLight = new THREE.PointLight(0x0055ff, 0.6, 10);
+                blueLight.position.set(-2, 1, 3);
+                scene.add(blueLight);
+                
+                const whiteLight = new THREE.PointLight(0xffffff, 0.3, 10);
+                whiteLight.position.set(2, -1, 2);
+                scene.add(whiteLight);
+                
+                // Start animation loop
+                animate();
+            }
+            
+            function createMonolith() {
+                const geometry = new THREE.BoxGeometry(1, 3, 0.5);
+                
+                // Custom shader material for the void monolith
+                const vertexShader = `
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    void main() {
+                        vUv = uv;
+                        vPosition = position;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `;
+                
+                const fragmentShader = `
+                    uniform float time;
+                    uniform int ritualType;
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    
+                    vec3 echoes_color() {
+                        float pulse = (sin(time * 0.6) + 1.0) * 0.5;
+                        vec3 color = vec3(0.05, 0.0, 0.1);
+                        float glow = smoothstep(0.3, 0.7, vUv.y) * smoothstep(0.7, 0.3, vUv.y);
+                        glow *= 0.4 + pulse * 0.6;
+                        color += vec3(glow * 0.2, 0.0, glow * 0.4);
+                        
+                        // Add void runes pattern
+                        float runes = sin(vUv.x * 15.0) * sin(vUv.y * 12.0 + time * 0.3);
+                        runes = smoothstep(0.3, 0.4, runes) * 0.2;
+                        color += vec3(runes * 0.3, 0.0, runes * 0.5);
+                        
+                        return color;
+                    }
+                    
+                    vec3 void_color() {
+                        float t = time * 1.5;
+                        vec3 baseColor = vec3(0.1, 0.0, 0.15);
+                        
+                        // Void streams effect
+                        float streams = sin(vUv.y * 30.0 + t) * 0.5 + 0.5;
+                        streams *= smoothstep(0.2, 0.3, streams) * smoothstep(0.7, 0.6, streams);
+                        
+                        // Deep purple glow
+                        float pulse = (sin(time * 0.8) + 1.0) * 0.5;
+                        float glow = pulse * 0.4;
+                        
+                        // Void symbol pattern - different from heart runes
+                        float symbols = sin(vUv.x * 8.0 + time * 0.2) * sin(vUv.y * 8.0 - time * 0.3);
+                        symbols = smoothstep(0.2, 0.3, symbols) * 0.4;
+                        
+                        // Swirling void effect
+                        vec2 center = vec2(0.5, 0.5);
+                        vec2 pos = vUv - center;
+                        float angle = atan(pos.y, pos.x) + time * 0.5;
+                        float spiral = sin(angle * 3.0 + length(pos) * 10.0) * 0.3;
+                        
+                        return baseColor + vec3(streams * 0.3 + glow + symbols * 0.2, 0.0, streams * 0.7 + glow * 1.5 + spiral * 0.4);
+                    }
+                    
+                    vec3 fragments_color() {
+                        float t = time;
+                        vec3 baseColor = vec3(0.08, 0.0, 0.12);
+                        
+                        // Fragmented energy pattern
+                        float fragments = sin(vUv.x * 25.0 + t) * sin(vUv.y * 20.0 - t * 0.7);
+                        fragments = smoothstep(0.1, 0.2, fragments);
+                        
+                        // Crystalline void structure
+                        vec2 center = vec2(0.5, 0.5);
+                        float dist = distance(vUv, center);
+                        float crystal = sin(dist * 20.0 - time) * 0.5 + 0.5;
+                        crystal = smoothstep(0.4, 0.6, crystal);
+                        
+                        // Pulsing light from center
+                        float pulse = (sin(time * 0.7) + 1.0) * 0.5;
+                        float centerGlow = smoothstep(0.9, 0.2, dist) * pulse * 0.5;
+                        
+                        // Scattered void particles
+                        float particles = sin(vUv.x * 50.0) * sin(vUv.y * 40.0);
+                        particles = smoothstep(0.7, 0.8, particles) * 0.3;
+                        
+                        return baseColor + 
+                               vec3(fragments * 0.1 + centerGlow * 0.3, 0.0, fragments * 0.2 + centerGlow * 0.8) + 
+                               vec3(crystal * 0.2, 0.0, crystal * 0.4) +
+                               vec3(particles * 0.4, particles * 0.1, particles * 0.6);
+                    }
+                    
+                    void main() {
+                        vec3 color;
+                        
+                        if (ritualType == 0) {
+                            color = echoes_color();
+                        } else if (ritualType == 1) {
+                            color = void_color();
+                        } else {
+                            color = fragments_color();
+                        }
+                        
+                        // Add void edge highlight
+                        float edge = 1.0 - smoothstep(0.0, 0.08, abs(vUv.x - 0.0)) * 
+                                     smoothstep(0.0, 0.08, abs(vUv.x - 1.0)) * 
+                                     smoothstep(0.0, 0.08, abs(vUv.y - 0.0)) * 
+                                     smoothstep(0.0, 0.08, abs(vUv.y - 1.0));
+                        color += vec3(edge * 0.05, 0.0, edge * 0.15);
+                        
+                        gl_FragColor = vec4(color, 0.92);
+                    }
+                `;
+                
+                const material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        time: { value: 0 },
+                        ritualType: { value: 0 } // 0: echoes, 1: void, 2: fragments
+                    },
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader,
+                    transparent: true
+                });
+                
+                monolith3D = new THREE.Mesh(geometry, material);
+                scene.add(monolith3D);
+            }
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                const delta = clock.getDelta();
+                
+                // Update shader time uniform
+                if (monolith3D && monolith3D.material.uniforms) {
+                    monolith3D.material.uniforms.time.value += delta;
+                }
+                
+                // Animate monolith based on current ritual
+                if (monolith3D) {
+                    const ritual = monolith3D.material.uniforms.ritualType.value;
+                    
+                    if (ritual === 0) { // Echoes ritual
+                        monolith3D.rotation.y = Math.sin(clock.getElapsedTime() * 0.4) * 0.3;
+                        monolith3D.position.y = Math.sin(clock.getElapsedTime() * 0.25) * 0.12;
+                        monolith3D.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * 0.6) * 0.02);
+                    } 
+                    else if (ritual === 1) { // Void ritual
+                        monolith3D.rotation.y = Math.sin(clock.getElapsedTime() * 0.9) * 0.6;
+                        monolith3D.rotation.z = Math.sin(clock.getElapsedTime() * 0.3) * 0.15;
+                        monolith3D.position.y = Math.sin(clock.getElapsedTime() * 0.4) * 0.25;
+                        monolith3D.position.x = Math.sin(clock.getElapsedTime() * 0.2) * 0.1;
+                    } 
+                    else if (ritual === 2) { // Fragments ritual
+                        monolith3D.rotation.y = clock.getElapsedTime() * 0.25;
+                        monolith3D.rotation.x = Math.sin(clock.getElapsedTime() * 0.7) * 0.25;
+                        monolith3D.rotation.z = Math.sin(clock.getElapsedTime() * 0.5) * 0.1;
+                        monolith3D.position.y = Math.sin(clock.getElapsedTime() * 0.8) * 0.18;
+                        
+                        // Fragmenting effect
+                        const fragmentPulse = Math.sin(clock.getElapsedTime() * 2) * 0.05 + 1;
+                        monolith3D.scale.setScalar(fragmentPulse);
+                    }
+                }
+                
+                renderer.render(scene, camera);
+            }
+            
+            // Initialize Three.js
+            initThreeJS();
+            
+            // Create void drips
+            const monolith = document.getElementById('monolith');
+            for (let i = 0; i < 12; i++) {
+                const drip = document.createElement('div');
+                drip.classList.add('void-drip', 'ritual-echoes');
+                
+                const dripTop = Math.random() * 250;
+                const dripLeft = Math.random() * 100;
+                const dripHeight = 5 + Math.random() * 15;
+                const dripDelay = Math.random() * 10;
+                
+                drip.style.setProperty('--drip-top', `${dripTop}px`);
+                drip.style.setProperty('--drip-height', `${dripHeight}px`);
+                drip.style.top = `${dripTop}px`;
+                drip.style.left = `${dripLeft}px`;
+                drip.style.animationDelay = `${dripDelay}s`;
+                
+                monolith.appendChild(drip);
+            }
+            
+            // Create floating glyphs around the monolith
+            const monolithContainer = document.getElementById('monolith-container');
+            const glyphs = ['虚', '魂', '影', '夢', '無', '空', '闇'];
+            
+            for (let i = 0; i < 8; i++) {
+                const glyph = document.createElement('div');
+                glyph.classList.add('floating-glyph', 'ritual-echoes');
+                glyph.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+                
+                const top = 20 + Math.random() * 260;
+                const left = 20 + Math.random() * 80;
+                const delay = Math.random() * 5;
+                const duration = 8 + Math.random() * 7;
+                
+                glyph.style.top = `${top}px`;
+                glyph.style.left = `${left}%`;
+                glyph.style.animationDelay = `${delay}s`;
+                glyph.style.animationDuration = `${duration}s`;
+                
+                monolithContainer.appendChild(glyph);
+            }
+            
+            // Initialize monolith with default ritual class
+            document.getElementById('monolith').classList.add('ritual-echoes');
+            document.getElementById('void-pool').classList.add('ritual-echoes');
+            
+            // Tab switching from sidebar with ritual-specific animations
+            const tabLinks = document.querySelectorAll('.tab-link');
+            tabLinks.forEach(tabLink => {
+                tabLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Remove active class from all tab links and content
+                    document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab link and corresponding content
+                    tabLink.classList.add('active');
+                    const tabId = tabLink.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Apply ritual-specific classes to monolith and related elements
+                    const monolith = document.getElementById('monolith');
+                    const voidPool = document.getElementById('void-pool');
+                    const floatingGlyphs = document.querySelectorAll('.floating-glyph');
+                    const voidDrips = document.querySelectorAll('.void-drip');
+                    
+                    // Remove all ritual classes
+                    monolith.classList.remove('ritual-echoes', 'ritual-void', 'ritual-fragments');
+                    voidPool.classList.remove('ritual-echoes', 'ritual-void', 'ritual-fragments');
+                    floatingGlyphs.forEach(glyph => {
+                        glyph.classList.remove('ritual-echoes', 'ritual-void', 'ritual-fragments');
+                    });
+                    voidDrips.forEach(drip => {
+                        drip.classList.remove('ritual-echoes', 'ritual-void', 'ritual-fragments');
+                    });
+                    
+                    // Add the new ritual class
+                    const ritualClass = `ritual-${tabId}`;
+                    monolith.classList.add(ritualClass);
+                    voidPool.classList.add(ritualClass);
+                    floatingGlyphs.forEach(glyph => {
+                        glyph.classList.add(ritualClass);
+                    });
+                    voidDrips.forEach(drip => {
+                        drip.classList.add(ritualClass);
+                    });
+                    
+                    // Update Three.js monolith animation
+                    if (monolith3D && monolith3D.material.uniforms) {
+                        if (tabId === 'echoes') {
+                            monolith3D.material.uniforms.ritualType.value = 0;
+                        } else if (tabId === 'void') {
+                            monolith3D.material.uniforms.ritualType.value = 1;
+                        } else if (tabId === 'fragments') {
+                            monolith3D.material.uniforms.ritualType.value = 2;
+                        }
+                    }
+                    
+                    // Change soul rune text for certain rituals
+                    const soulRunes = document.querySelectorAll('.soul-rune');
+                    if (tabId === 'echoes') {
+                        soulRunes[0].textContent = '魂';
+                        soulRunes[1].textContent = '虚';
+                    } else if (tabId === 'void') {
+                        soulRunes[0].textContent = '無';
+                        soulRunes[1].textContent = '空';
+                    } else if (tabId === 'fragments') {
+                        soulRunes[0].textContent = '影';
+                        soulRunes[1].textContent = '夢';
+                    }
+                    
+                    // Show notification
+                    showNotification(`ACCESSING ${tabId.toUpperCase()} ESSENCE...`);
+                    
+                    // Create additional ritual-specific floating glyphs
+                    if (tabId === 'void') {
+                        createVoidGlyphs();
+                    } else {
+                        // Remove any additional glyphs
+                        const additionalGlyphs = document.querySelectorAll('.additional-glyph');
+                        additionalGlyphs.forEach(glyph => glyph.remove());
+                    }
+                });
+            });
+            
+            // Function to create special void glyphs
+            function createVoidGlyphs() {
+                // Remove any existing additional glyphs
+                const existingGlyphs = document.querySelectorAll('.additional-glyph');
+                existingGlyphs.forEach(glyph => glyph.remove());
+                
+                const monolithContainer = document.getElementById('monolith-container');
+                const voidGlyphs = ['無', '空', '虚', '闇', '夜', '静', '深', '永', '冥'];
+                
+                // Create a circle of void glyphs
+                for (let i = 0; i < 8; i++) {
+                    const glyph = document.createElement('div');
+                    glyph.classList.add('floating-glyph', 'additional-glyph', 'ritual-void');
+                    glyph.textContent = voidGlyphs[Math.floor(Math.random() * voidGlyphs.length)];
+                    
+                    // Position in a circle around the monolith
+                    const angle = (i / 8) * Math.PI * 2;
+                    const radius = 150;
+                    const top = 175 + Math.sin(angle) * radius;
+                    const left = 50 + Math.cos(angle) * radius;
+                    
+                    glyph.style.top = `${top}px`;
+                    glyph.style.left = `${left}%`;
+                    glyph.style.animationDelay = `${i * 0.5}s`;
+                    
+                    monolithContainer.appendChild(glyph);
+                }
+            }
+            
+            // Dropdown toggle
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            dropdownToggle.addEventListener('click', () => {
+                const dropdown = dropdownToggle.parentElement;
+                dropdown.classList.toggle('open');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.dropdown')) {
+                    document.querySelector('.dropdown').classList.remove('open');
+                }
+            });
+            
+            // Add click event to all sidebar links for navigation
+            document.querySelectorAll('#sidebar a.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    const sectionId = link.getAttribute('data-section');
+                    const linkText = link.textContent;
+                    showNotification(`ACCESSING ${linkText}...`);
+                    
+                    // Hide all content sections
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show the corresponding section
+                    document.getElementById(sectionId).classList.add('active');
+                });
+            });
+            
+            // Add click event for member links
+            document.querySelectorAll('#sidebar a.member-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showNotification(`CONTACTING ${link.textContent}...`);
+                });
+            });
+            
+            // Add click event for realm links
+            document.querySelectorAll('#sidebar a.realm-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showNotification(`ENTERING ${link.textContent}...`);
+                });
+            });
+            
+            // Glitch effect on title
+            const title = document.querySelector('.title');
+            title.setAttribute('data-text', title.textContent);
+            title.classList.add('glitch');
+            
+            // Random glitch on elements
+            setInterval(() => {
+                const elements = document.querySelectorAll('.tab-content p, .scroll-box p, .member-link, .realm-link, .soul-name');
+                const randomElement = elements[Math.floor(Math.random() * elements.length)];
+                randomElement.style.textShadow = '0 0 8px #AA00FF, 0 0 12px #FFFFFF';
+                
+                setTimeout(() => {
+                    randomElement.style.textShadow = '';
+                }, 150);
+            }, 3000);
+            
+            // Void pulse effect on the monolith
+            setInterval(() => {
+                const soulRunes = document.querySelectorAll('.soul-rune');
+                soulRunes.forEach(rune => {
+                    rune.style.textShadow = '0 0 10px #AA00FF, 0 0 15px #FFFFFF';
+                    rune.style.fontSize = '18px';
+                    
+                    setTimeout(() => {
+                        rune.style.textShadow = '0 0 5px #AA00FF';
+                        rune.style.fontSize = '14px';
+                    }, 500);
+                });
+            }, 5000);
+        });
+        
+        // Show notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
